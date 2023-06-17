@@ -1,0 +1,43 @@
+﻿@using SimpleTemplate.Client.Auth;
+@inject IDialogService DialogService
+@inject AuthenticationStateProvider AuthenticationStateProvider
+@inject IAuthenticationService AuthenticationService
+
+<MudAppBar Color="Color.Primary" Fixed="false">
+    <MudIconButton Icon="@Icons.Material.Filled.Menu" Color="Color.Inherit" Edge="Edge.Start" />
+    <MudSpacer />
+    <AuthorizeView>
+        <Authorized>
+            <MudButton @onclick="Logout" Class="mr-2" Variant="Variant.Outlined" Color="Color.Inherit">LOGOUT</MudButton>
+        </Authorized>
+        <NotAuthorized>
+            <MudButton @onclick="OpenLoginForm" Class="mr-2" Variant="Variant.Outlined" Color="Color.Inherit">LOGIN</MudButton>
+            <MudButton @onclick="OpenRegistrationForm" Variant="Variant.Outlined" Color="Color.Inherit">REGISTER</MudButton>
+        </NotAuthorized>
+    </AuthorizeView>
+
+</MudAppBar>
+
+@code{
+    private void OpenLoginForm()
+    {
+        var options = new DialogOptions { CloseOnEscapeKey = true };
+        DialogService.Show<LoginDialog>("LOGIN", options);
+    }
+
+    private void OpenRegistrationForm()
+    {
+        var options = new DialogOptions { CloseOnEscapeKey = true };
+        DialogService.Show<RegisterDialog>("REGISTRATION", options);
+    }
+
+    protected async override Task OnInitializedAsync()
+    {
+        await ((CustomAuthenticationStateProvider)AuthenticationStateProvider).GetAuthenticationStateAsync();
+    }
+
+    protected async void Logout()
+    {
+        await AuthenticationService.Logout();
+    }
+}

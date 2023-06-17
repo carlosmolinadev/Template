@@ -1,0 +1,74 @@
+﻿
+@inject IAuthenticationService AuthenticationService
+
+<MudDialog>
+    <DialogContent>
+        <MudGrid Style="width: 500px">
+            <MudItem xs="12">
+                <MudForm @ref="form" @bind-IsValid="@success" @bind-Errors="@errors">
+                    <MudTextField T="string" Variant="Variant.Outlined" Label="First Name" Required="true" RequiredError="First Name is required!" @bind-Value="model.FirstName" />
+                    <MudTextField T="string" Variant="Variant.Outlined" Label="Last Name" Required="true" RequiredError="Last Name is required!" @bind-Value="model.LastName" />
+                    <MudTextField T="string" Variant="Variant.Outlined" Label="Username" Required="true" RequiredError="Username is required!" @bind-Value="model.UserName" />
+                    <MudTextField T="string" Variant="Variant.Outlined" Label="Email" Required="true" RequiredError="Email is required!" @bind-Value="model.Email"
+                                  Validation="@(new EmailAddressAttribute() {ErrorMessage = "The email address is invalid"})"/>
+                    <MudTextField T="string" Variant="Variant.Outlined" Label="Password" HelperText="Choose a strong password" @ref="pwField" @bind-Value="model.Password"
+                                  InputType="InputType.Password"
+                                  Validation="@(new Func<string, IEnumerable<string>>(PasswordStrength))" Required="true"
+                                  RequiredError="Password is required!" />
+                    <MudTextField T="string" Variant="Variant.Outlined"
+                                  Label="Password" HelperText="Repeat the password" InputType="InputType.Password"
+                                  Validation="@(new Func<string, string>(PasswordMatch))" />
+                </MudForm>
+            </MudItem>
+        </MudGrid>
+    </DialogContent>
+
+    <DialogActions>
+        <MudButton OnClick="Cancel">Cancel</MudButton>
+        <MudButton Color="Color.Primary" OnClick="SubmitForm">Register</MudButton>
+    </DialogActions>
+</MudDialog>
+
+@code {
+    [CascadingParameter] MudDialogInstance? MudDialog { get; set; }
+
+    void Submit() => MudDialog?.Close(DialogResult.Ok(true));
+    void Cancel() => MudDialog?.Cancel();
+
+    bool success;
+    string[] errors = { };
+    MudTextField<string>? pwField;
+    MudForm? form;
+    RegistrationRequest model = new RegistrationRequest();
+
+    private IEnumerable<string> PasswordStrength(string pw)
+    {
+        if (string.IsNullOrWhiteSpace(pw))
+        {
+            yield return "Password is required!";
+            yield break;
+        }
+        if (pw.Length < 8)
+            yield return "Password must be at least of length 8";
+        if (!Regex.IsMatch(pw, @"[A-Z]"))
+            yield return "Password must contain at least one capital letter";
+        if (!Regex.IsMatch(pw, @"[a-z]"))
+            yield return "Password must contain at least one lowercase letter";
+        if (!Regex.IsMatch(pw, @"[0-9]"))
+            yield return "Password must contain at least one digit";
+    }
+
+    private string PasswordMatch(string arg)
+    {
+        if (pwField != null && pwField.Value != arg)
+            return "Passwords don't match";
+        return string.Empty;
+    }
+
+    private async void SubmitForm()
+    {
+        form?.Validate();
+        await AuthenticationService.Register(model);
+    }
+    
+}

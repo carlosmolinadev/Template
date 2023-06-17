@@ -1,0 +1,38 @@
+﻿@inject IAuthenticationService AuthenticationService
+
+<MudDialog>
+    <DialogContent>
+        <MudGrid Style="width: 500px">
+            <MudItem xs="12">
+                <MudForm @ref="form" @bind-IsValid="@success" @bind-Errors="@errors">
+                    <MudTextField T="string" Variant="Variant.Outlined" Label="Username" Required="true" RequiredError="Username is required!" @bind-Value="model.Username" />
+                    <MudTextField T="string" Variant="Variant.Outlined" Label="Password" Required="true" RequiredError="Password is required!" @bind-Value="model.Password"
+                                  InputType="InputType.Password" />
+                </MudForm>
+            </MudItem>
+        </MudGrid>
+    </DialogContent>
+
+    <DialogActions>
+        <MudButton OnClick="Cancel">Cancel</MudButton>
+        <MudButton Color="Color.Primary" OnClick="Submit">Login</MudButton>
+    </DialogActions>
+</MudDialog>
+
+@code {
+    [CascadingParameter] MudDialogInstance? MudDialog { get; set; }
+
+    bool success;
+    string[] errors = { };
+    MudForm? form;
+    AuthenticationRequest model = new AuthenticationRequest();
+
+    private async void Submit()
+    {
+        form?.Validate();
+        await AuthenticationService.Authenticate(model);
+        MudDialog?.Close(DialogResult.Ok(true));
+    }
+    
+    void Cancel() => MudDialog?.Cancel();
+}
